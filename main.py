@@ -2,10 +2,10 @@ import pygame
 
 pygame.init()
 vec = pygame.math.Vector2
-size = width, height = 1200, 700
+size = width, height = 1280, 720
 screen = pygame.display.set_mode(size)
 clock = pygame.time.Clock()
-fps = 60
+fps = 23
 PLATFORM_WIDTH = 32
 PLATFORM_HEIGHT = 32
 PLATFORM_COLOR = "#FF6262"
@@ -70,38 +70,42 @@ class Platform(pygame.sprite.Sprite):
     def __init__(self, x, y):
         pygame.sprite.Sprite.__init__(self)
         self.image = pygame.Surface((PLATFORM_WIDTH, PLATFORM_HEIGHT))
-        self.image.fill(pygame.Color(PLATFORM_COLOR))
+        self.image = pygame.image.load("data/trava.png").convert()
         self.rect = pygame.draw.rect(screen, PLATFORM_COLOR, (x, y, PLATFORM_WIDTH, PLATFORM_HEIGHT))
 
 
 level = [
-    "-------------------------",
-    "-                       -",
-    "-                       -",
-    "-                       -",
-    "-            --         -",
-    "-                       -",
-    "--                      -",
-    "-                       -",
-    "-                   --- -",
-    "-                       -",
-    "-                       -",
-    "-      ---              -",
-    "-                       -",
-    "-   -----------        -",
-    "-                       -",
-    "-                -      -",
-    "-                   --  -",
-    "-                       -",
-    "-                       -",
-    "-------------------------"]
-hero = Player(55, 55)
+    "                                          ",
+    "                                          ",
+    "                                          ",
+    "                                          ",
+    "                                          ",
+    "                                          ",
+    "                                          ",
+    "                                          ",
+    "                                          ",
+    "                                          ",
+    "       ---                                ",
+    "                                          ",
+    "    -----------     --            - --    ",
+    "                                          ",
+    "                    --           -        ",
+    "                                          ",
+    "                             ----- -   -  ",
+    "                       --                 ",
+    "       ---   -    ---     ----------      ",
+    "                                          ",
+    "                                          ",
+    "-----------------------------------------"]
+
+hero = Player(33, 700)
 entities = pygame.sprite.Group()
 platforms = []
 entities.add(hero)
 left = right = False
 up = False
 running = True
+entities.draw(screen)
 while running:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
@@ -133,4 +137,5 @@ while running:
     pygame.display.flip()
     screen.fill((66, 170, 255))
     clock.tick(fps)
+    print(clock.get_fps())
 pygame.quit()
