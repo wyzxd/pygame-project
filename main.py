@@ -1,18 +1,17 @@
 import pygame
 
 pygame.init()
-vec = pygame.math.Vector2
 size = width, height = 1280, 720
 screen = pygame.display.set_mode(size)
 clock = pygame.time.Clock()
-fps = 23
+fps = 60
 PLATFORM_WIDTH = 32
 PLATFORM_HEIGHT = 32
-PLATFORM_COLOR = "#FF6262"
-MOVE_SPEED = 7
-WIDTH = 22
+PLATFORM_COLOR = "#FA8072"
+MOVE_SPEED = 3
+WIDTH = 32
 HEIGHT = 32
-JUMP_POWER = 10
+JUMP_POWER = 8
 GRAVITY = 0.35
 
 
@@ -49,30 +48,46 @@ class Player(pygame.sprite.Sprite):
     def collide(self, xvel, yvel, platforms):
         for p in platforms:
             if pygame.sprite.collide_rect(self, p):
-
                 if xvel > 0:
                     self.rect.right = p.rect.left
-
                 if xvel < 0:
                     self.rect.left = p.rect.right
-
                 if yvel > 0:
                     self.rect.bottom = p.rect.top
                     self.onGround = True
                     self.yvel = 0
-
                 if yvel < 0:
                     self.rect.top = p.rect.bottom
                     self.yvel = 0
+
+
+class Camera:
+    def __init__(self):
+        self.dx = 0
+        self.dy = 0
+
+    def apply(self, obj):
+        obj.rect.x += self.dx
+        obj.rect.y += self.dy
+
+    def update(self, target):
+        self.dx = -(target.rect.x + target.rect.w // 2 - width // 2)
+        self.dy = -(target.rect.y + target.rect.h // 2 - height // 2)
 
 
 class Platform(pygame.sprite.Sprite):
     def __init__(self, x, y):
         pygame.sprite.Sprite.__init__(self)
         self.image = pygame.Surface((PLATFORM_WIDTH, PLATFORM_HEIGHT))
-        self.image = pygame.image.load("data/trava.png").convert()
+        self.image = pygame.transform.scale(pygame.image.load("data/trava.png").convert(), (32, 32))
         self.rect = pygame.draw.rect(screen, PLATFORM_COLOR, (x, y, PLATFORM_WIDTH, PLATFORM_HEIGHT))
 
+
+camera = Camera()
+player = Player(201, 700)
+entities = pygame.sprite.Group()
+platforms = []
+entities.add(player)
 
 level = [
     "                                          ",
@@ -85,9 +100,9 @@ level = [
     "                                          ",
     "                                          ",
     "                                          ",
-    "       ---                                ",
     "                                          ",
-    "    -----------     --            - --    ",
+    "                                          ",
+    "                                          ",
     "                                          ",
     "                    --           -        ",
     "                                          ",
@@ -98,14 +113,21 @@ level = [
     "                                          ",
     "-----------------------------------------"]
 
-hero = Player(33, 700)
-entities = pygame.sprite.Group()
-platforms = []
-entities.add(hero)
 left = right = False
 up = False
 running = True
-entities.draw(screen)
+x = y = 0
+for row in level:
+    for col in row:
+        if col == "-":
+            pf = Platform(x, y)
+            entities.add(pf)
+            platforms.append(pf)
+
+        x += PLATFORM_WIDTH
+    y += PLATFORM_HEIGHT
+    x = 0
+
 while running:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
@@ -122,19 +144,12 @@ while running:
             right = False
         if event.type == pygame.KEYUP and event.key == pygame.K_LEFT:
             left = False
-    x = y = 0
-    for row in level:
-        for col in row:
-            if col == "-":
-                pf = Platform(x, y)
-                entities.add(pf)
-                platforms.append(pf)
-            x += PLATFORM_WIDTH
-        y += PLATFORM_HEIGHT
-        x = 0
     entities.draw(screen)
-    hero.update(left, right, up, platforms)
-    pygame.display.flip()
+    camera.update(player)
+    for sprite in entities:
+        camera.apply(sprite)
+    player.update(left, right, up, platforms)
+    pygame.display.update()
     screen.fill((66, 170, 255))
     clock.tick(fps)
     print(clock.get_fps())
