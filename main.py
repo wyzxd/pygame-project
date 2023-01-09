@@ -1,15 +1,16 @@
 import pygame
 
 pygame.init()
+vec = pygame.math.Vector2
 size = width, height = 1280, 720
 screen = pygame.display.set_mode(size)
 clock = pygame.time.Clock()
 fps = 60
 PLATFORM_WIDTH = 32
 PLATFORM_HEIGHT = 32
-PLATFORM_COLOR = "#FA8072"
+PLATFORM_COLOR = "#FFFFFF"
 MOVE_SPEED = 3
-WIDTH = 32
+WIDTH = 22
 HEIGHT = 32
 JUMP_POWER = 8
 GRAVITY = 0.35
@@ -19,26 +20,43 @@ class Player(pygame.sprite.Sprite):
     def __init__(self, x, y):
         pygame.sprite.Sprite.__init__(self)
         self.xvel = 0
+        self.jump_turn = 0
         self.startX = x
         self.startY = y
-        self.image = pygame.Surface((WIDTH, HEIGHT))
-        self.image.fill(pygame.Color(0, 0, 0))
-        self.rect = pygame.draw.rect(screen, (0, 0, 0), (x, y, WIDTH, HEIGHT))
         self.yvel = 0
+        self.image = pygame.Surface((WIDTH, HEIGHT))
+        self.image = pygame.transform.scale(pygame.image.load('data/idle/5.png').convert_alpha(), (42, 32))
+        self.image_right = pygame.transform.scale(pygame.image.load('data/idle/5.png').convert_alpha(), (42, 32))
+        self.image_left = pygame.transform.flip(self.image_right, True, False)
+
+        self.image_jump_right = pygame.transform.scale(pygame.image.load('data/jump/3.png').convert_alpha(), (29, 32))
+        self.image_jump_left = pygame.transform.flip(self.image_jump_right, True, False)
+        self.image_fall = pygame.transform.scale(pygame.image.load('data/fall/fall.png').convert_alpha(), (42, 32))
+        self.rect = pygame.draw.rect(screen, (0, 0, 0), (x, y, WIDTH, HEIGHT))
         self.onGround = False
 
     def update(self, left, right, up, platforms):
         if left:
+            self.image = self.image_left
             self.xvel = -MOVE_SPEED
+            self.jump_turn = 1
         if right:
+            self.image = self.image_right
             self.xvel = MOVE_SPEED
+            self.jump_turn = 0
         if not (left or right):
             self.xvel = 0
         self.rect.x += self.xvel
         self.collide(self.xvel, 0, platforms)
+
         if up:
+            if self.jump_turn == 1:
+                self.image = self.image_jump_left
+            else:
+                self.image = self.image_jump_right
             if self.onGround:
                 self.yvel = -JUMP_POWER
+
         if not self.onGround:
             self.yvel += GRAVITY
         self.onGround = False
@@ -47,15 +65,20 @@ class Player(pygame.sprite.Sprite):
 
     def collide(self, xvel, yvel, platforms):
         for p in platforms:
+
             if pygame.sprite.collide_rect(self, p):
+
                 if xvel > 0:
                     self.rect.right = p.rect.left
+
                 if xvel < 0:
                     self.rect.left = p.rect.right
+
                 if yvel > 0:
                     self.rect.bottom = p.rect.top
                     self.onGround = True
                     self.yvel = 0
+
                 if yvel < 0:
                     self.rect.top = p.rect.bottom
                     self.yvel = 0
@@ -79,39 +102,41 @@ class Platform(pygame.sprite.Sprite):
     def __init__(self, x, y):
         pygame.sprite.Sprite.__init__(self)
         self.image = pygame.Surface((PLATFORM_WIDTH, PLATFORM_HEIGHT))
-        self.image = pygame.transform.scale(pygame.image.load("data/trava.png").convert(), (32, 32))
+        self.image = pygame.image.load('data/trava.png').convert_alpha()
         self.rect = pygame.draw.rect(screen, PLATFORM_COLOR, (x, y, PLATFORM_WIDTH, PLATFORM_HEIGHT))
+class Portal(pygame.sprite.Sprite):
+    def __init__(self, x, y):
+        pygame.sprite.sp
 
 
+level = [
+    "-                                 -",
+    "-                                 -",
+    "-                                 -",
+    "-                                *-",
+    "-                            ------",
+    "-                 --  ---         -",
+    "-            --                   -",
+    "-     ----                        -",
+    "--                                -",
+    "-      ------                     -",
+    "-                        ---      -",
+    "-                                 -",
+    "-              ------             -",
+    "-      ---                        -",
+    "-                                 -",
+    "-   -----------                   -",
+    "-                                 -",
+    "-                -                -",
+    "-                   ---  --       -",
+    "-                                 -",
+    "-                                 -",
+    "-----------------------------------"]
 camera = Camera()
-player = Player(201, 700)
+player = Player(200, 200)
 entities = pygame.sprite.Group()
 platforms = []
 entities.add(player)
-
-level = [
-    "                                          ",
-    "                                          ",
-    "                                          ",
-    "                                          ",
-    "                                          ",
-    "                                          ",
-    "                                          ",
-    "                                          ",
-    "                                          ",
-    "                                          ",
-    "                                          ",
-    "                                          ",
-    "                                          ",
-    "                                          ",
-    "                    --           -        ",
-    "                                          ",
-    "                             ----- -   -  ",
-    "                       --                 ",
-    "       ---   -    ---     ----------      ",
-    "                                          ",
-    "                                          ",
-    "-----------------------------------------"]
 
 left = right = False
 up = False
@@ -119,15 +144,14 @@ running = True
 x = y = 0
 for row in level:
     for col in row:
+
         if col == "-":
             pf = Platform(x, y)
             entities.add(pf)
             platforms.append(pf)
-
         x += PLATFORM_WIDTH
     y += PLATFORM_HEIGHT
     x = 0
-
 while running:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
@@ -152,5 +176,4 @@ while running:
     pygame.display.update()
     screen.fill((66, 170, 255))
     clock.tick(fps)
-    print(clock.get_fps())
 pygame.quit()
