@@ -1,4 +1,5 @@
 import pygame
+import sys
 
 pygame.init()
 vec = pygame.math.Vector2
@@ -14,6 +15,23 @@ WIDTH = 22
 HEIGHT = 32
 JUMP_POWER = 8
 GRAVITY = 0.35
+
+
+def game_over():
+    screen.fill((66, 170, 255))
+    text = ["Вы прошли игру",
+            "Спасибо за то что поиграли в нее."
+            ]
+    font = pygame.font.Font(None, 30)
+    text_coord = 50
+    for line in text:
+        string_rendered = font.render(line, 1, pygame.Color('white'))
+        intro_rect = string_rendered.get_rect()
+        text_coord += 10
+        intro_rect.top = text_coord
+        intro_rect.x = 10
+        text_coord += intro_rect.height
+        screen.blit(string_rendered, intro_rect)
 
 
 class Player(pygame.sprite.Sprite):
@@ -59,6 +77,7 @@ class Player(pygame.sprite.Sprite):
 
         if not self.onGround:
             self.yvel += GRAVITY
+
         self.onGround = False
         self.rect.y += self.yvel
         self.collide(0, self.yvel, platforms)
@@ -83,6 +102,13 @@ class Player(pygame.sprite.Sprite):
                     self.rect.top = p.rect.bottom
                     self.yvel = 0
 
+    def portal_collide(self, xvel, portals):
+        for p in portals:
+            if pygame.sprite.collide_rect(self, p):
+                if xvel > 0:
+                    self.rect.right = p.rect.left
+                    game_over = 1
+
 
 class Camera:
     def __init__(self):
@@ -104,40 +130,45 @@ class Platform(pygame.sprite.Sprite):
         self.image = pygame.Surface((PLATFORM_WIDTH, PLATFORM_HEIGHT))
         self.image = pygame.image.load('data/trava.png').convert_alpha()
         self.rect = pygame.draw.rect(screen, PLATFORM_COLOR, (x, y, PLATFORM_WIDTH, PLATFORM_HEIGHT))
+
+
 class Portal(pygame.sprite.Sprite):
     def __init__(self, x, y):
-        pygame.sprite.sp
+        pygame.sprite.Sprite.__init__(self)
+        self.image = pygame.Surface((PLATFORM_WIDTH, PLATFORM_HEIGHT))
+        self.image = pygame.transform.scale(pygame.image.load('data/portal.png').convert_alpha(), (30, 48))
+        self.rect = pygame.draw.rect(screen, PLATFORM_COLOR, (x, y, PLATFORM_WIDTH, PLATFORM_HEIGHT))
 
 
 level = [
-    "-                                 -",
-    "-                                 -",
-    "-                                 -",
-    "-                                *-",
-    "-                            ------",
-    "-                 --  ---         -",
-    "-            --                   -",
-    "-     ----                        -",
-    "--                                -",
-    "-      ------                     -",
-    "-                        ---      -",
-    "-                                 -",
-    "-              ------             -",
-    "-      ---                        -",
-    "-                                 -",
-    "-   -----------                   -",
-    "-                                 -",
-    "-                -                -",
-    "-                   ---  --       -",
-    "-                                 -",
-    "-                                 -",
-    "-----------------------------------"]
+    "-                                    -",
+    "-                                    -",
+    "-                                    -",
+    "-                                   *-",
+    "-                               ------",
+    "-                    --  ---         -",
+    "-               --                   -",
+    "-                                    -",
+    "--                                   -",
+    "-         ------                     -",
+    "-                           ---      -",
+    "-                                    -",
+    "-                 ------             -",
+    "-         ---                        -",
+    "-                                    -",
+    "-      -----------                   -",
+    "-                                    -",
+    "-                   -                -",
+    "-                      ---  --       -",
+    "-                                    -",
+    "-                                    -",
+    "--------------------------------------"]
 camera = Camera()
 player = Player(200, 200)
 entities = pygame.sprite.Group()
 platforms = []
+portals = []
 entities.add(player)
-
 left = right = False
 up = False
 running = True
@@ -149,9 +180,14 @@ for row in level:
             pf = Platform(x, y)
             entities.add(pf)
             platforms.append(pf)
+        if col == "*":
+            pr = Portal(x, y)
+            entities.add(pr)
+            portals.append(pr)
         x += PLATFORM_WIDTH
     y += PLATFORM_HEIGHT
     x = 0
+
 while running:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
@@ -169,11 +205,13 @@ while running:
         if event.type == pygame.KEYUP and event.key == pygame.K_LEFT:
             left = False
     entities.draw(screen)
-    camera.update(player)
+    # camera.update(player)
     for sprite in entities:
         camera.apply(sprite)
     player.update(left, right, up, platforms)
     pygame.display.update()
     screen.fill((66, 170, 255))
     clock.tick(fps)
+    if game_over == 1:
+        game_over()
 pygame.quit()
