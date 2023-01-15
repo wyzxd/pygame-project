@@ -18,7 +18,7 @@ GRAVITY = 0.35
 
 
 def game_over():
-    screen.fill((66, 170, 255))
+    screen.fill((0, 0, 0))
     text = ["Вы прошли игру",
             "Спасибо за то что поиграли в нее."
             ]
@@ -66,7 +66,7 @@ class Player(pygame.sprite.Sprite):
             self.xvel = 0
         self.rect.x += self.xvel
         self.collide(self.xvel, 0, platforms)
-
+        self.portal_collide(self.xvel, portals)
         if up:
             if self.jump_turn == 1:
                 self.image = self.image_jump_left
@@ -107,7 +107,7 @@ class Player(pygame.sprite.Sprite):
             if pygame.sprite.collide_rect(self, p):
                 if xvel > 0:
                     self.rect.right = p.rect.left
-                    game_over = 1
+                    game_over()
 
 
 class Camera:
@@ -175,7 +175,6 @@ running = True
 x = y = 0
 for row in level:
     for col in row:
-
         if col == "-":
             pf = Platform(x, y)
             entities.add(pf)
@@ -212,6 +211,4 @@ while running:
     pygame.display.update()
     screen.fill((66, 170, 255))
     clock.tick(fps)
-    if game_over == 1:
-        game_over()
 pygame.quit()
