@@ -1,9 +1,8 @@
 import pygame
-import sys
 
 pygame.init()
 vec = pygame.math.Vector2
-size = width, height = 1280, 720
+size = width, height = 1210, 700
 screen = pygame.display.set_mode(size)
 clock = pygame.time.Clock()
 fps = 60
